@@ -1,0 +1,54 @@
+{
+    "api_name": "PrediRev API",
+    "version": "1.0.0",
+    "base_url": "http://localhost:3000/api",
+    "collections": [
+      {
+        "name": "Personas",
+        "endpoints": [
+          { "method": "GET", "path": "/personas", "description": "Obtiene todas las personas registradas." },
+          { "method": "GET", "path": "/personas/:id", "description": "Obtiene una persona específica por su ID." },
+          { "method": "POST", "path": "/personas", "description": "Crea una nueva persona." },
+          { "method": "PUT", "path": "/personas/:id", "description": "Actualiza los datos de una persona existente." },
+          { "method": "PATCH", "path": "/personas/:id/activar", "description": "Activa o inactiva una persona." },
+          { "method": "DELETE", "path": "/personas/:id", "description": "Elimina una persona (solo super admin)." }
+        ]
+      },
+      {
+        "name": "Publicadores",
+        "endpoints": [
+          { "method": "GET", "path": "/publicadores", "description": "Lista todos los publicadores (requiere token JWT)." },
+          { "method": "POST", "path": "/publicadores", "description": "Crea un nuevo publicador." },
+          { "method": "PATCH", "path": "/publicadores/:id/estado", "description": "Cambia el estado activo/inactivo de un publicador." },
+          { "method": "DELETE", "path": "/publicadores/:id", "description": "Elimina un publicador (solo super admin)." }
+        ]
+      },
+      {
+        "name": "Revisitas",
+        "endpoints": [
+          { "method": "GET", "path": "/revisitas", "description": "Obtiene todas las revisitas activas." },
+          { "method": "POST", "path": "/revisitas", "description": "Crea una nueva revisita." },
+          { "method": "PATCH", "path": "/revisitas/:id/completada", "description": "Marca una revisita como completada." },
+          { "method": "PATCH", "path": "/revisitas/:id/estado", "description": "Activa o inactiva una revisita." },
+          { "method": "DELETE", "path": "/revisitas/:id", "description": "Elimina una revisita (solo super admin)." }
+        ]
+      },
+      {
+        "name": "Tiempos",
+        "endpoints": [
+          { "method": "GET", "path": "/tiempos", "description": "Lista los tiempos registrados." },
+          { "method": "POST", "path": "/tiempos", "description": "Registra un nuevo tiempo." },
+          { "method": "PATCH", "path": "/tiempos/:id/estado", "description": "Activa o inactiva un tiempo registrado." },
+          { "method": "DELETE", "path": "/tiempos/:id", "description": "Elimina un registro de tiempo (solo super admin)." }
+        ]
+      },
+      {
+        "name": "Autenticación",
+        "endpoints": [
+          { "method": "POST", "path": "/auth/register", "description": "Registra un nuevo usuario (solo super admin)." },
+          { "method": "POST", "path": "/auth/login", "description": "Inicia sesión y devuelve un token JWT." }
+        ]
+      }
+    ]
+  }
+  
