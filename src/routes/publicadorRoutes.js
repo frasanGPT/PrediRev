@@ -7,20 +7,20 @@ import {
   actualizarPublicador,
   eliminarPublicador
 } from "../controllers/publicadorController.js";
+import { verificarToken, verificarRol } from "../middleware/authMiddleware.js";
 import Publicador from "../models/Publicador.js";
-
 
 const router = express.Router();
 
-// Rutas CRUD para Publicador
-router.post("/", crearPublicador);            // Crear nuevo publicador
-router.get("/", obtenerPublicadores);         // Listar todos
-router.get("/:id", obtenerPublicadorPorId);   // Obtener por ID
-router.put("/:id", actualizarPublicador);     // Actualizar
-router.delete("/:id", eliminarPublicador);    // Eliminar
+// Rutas CRUD con protección JWT y roles
+router.post("/", verificarToken, verificarRol("super", "admin"), crearPublicador);        // Crear
+router.get("/", verificarToken, obtenerPublicadores);                                     // Listar todos
+router.get("/:id", verificarToken, obtenerPublicadorPorId);                               // Obtener por ID
+router.put("/:id", verificarToken, verificarRol("super", "admin"), actualizarPublicador); // Actualizar
+router.delete("/:id", verificarToken, verificarRol("super"), eliminarPublicador);         // Eliminar
 
-// 🔹 Nueva ruta para cambiar el estado (activar/inactivar)
-router.patch("/:id/estado", async (req, res) => {
+// 🔹 Ruta de cambio de estado (solo super o admin)
+router.patch("/:id/estado", verificarToken, verificarRol("super", "admin"), async (req, res) => {
   try {
     const { estado } = req.body;
     const publicadorActualizado = await Publicador.findByIdAndUpdate(
@@ -38,4 +38,3 @@ router.patch("/:id/estado", async (req, res) => {
 });
 
 export default router;
-

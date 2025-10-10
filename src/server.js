@@ -18,15 +18,16 @@ import personaRoutes from "./routes/personaRoutes.js";
 import publicadorRoutes from "./routes/publicadorRoutes.js";
 import revisitaRoutes from "./routes/revisitaRoutes.js";
 import tiempoRoutes from "./routes/tiempoRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
 
 
+// Rutas:
 app.use("/api/personas", personaRoutes);
 app.use("/api/publicadores", publicadorRoutes);
 app.use("/api/revisitas", revisitaRoutes);
 app.use("/api/tiempos", tiempoRoutes);
-
-
+app.use("/api/auth", authRoutes);
 
 
 

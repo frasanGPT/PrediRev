@@ -45,8 +45,14 @@ const publicadorSchema = new mongoose.Schema({
     type: String,
     required: true,
     maxlength: 8,
-    enum: ["activo", "inactivo"]
+    enum: ["activo", "inactivo"],
+    default: "activo"
+  },
+  password: {
+    type: String,
+    required: true,
+    minlength: 6
   }
-}, { timestamps: true }); // ← Aquí estaba la llave faltante
+}, { timestamps: true });
 
 export default mongoose.model("Publicador", publicadorSchema);
