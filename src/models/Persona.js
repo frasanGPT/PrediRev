@@ -110,6 +110,7 @@ const personaSchema = new mongoose.Schema({
   },
   activo: {
     type: String,
+    required: true,
     maxlength: 5
   },
   correo: {

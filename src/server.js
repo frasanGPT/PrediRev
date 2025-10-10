@@ -15,7 +15,11 @@ app.use(cors());
 app.use(express.json());
 
 import personaRoutes from "./routes/personaRoutes.js";
+import publicadorRoutes from "./routes/publicadorRoutes.js";
+
 app.use("/api/personas", personaRoutes);
+app.use("/api/publicadores", publicadorRoutes);
+
 
 
 
