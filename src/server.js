@@ -16,9 +16,13 @@ app.use(express.json());
 
 import personaRoutes from "./routes/personaRoutes.js";
 import publicadorRoutes from "./routes/publicadorRoutes.js";
+import revisitaRoutes from "./routes/revisitaRoutes.js";
+
 
 app.use("/api/personas", personaRoutes);
 app.use("/api/publicadores", publicadorRoutes);
+app.use("/api/revisitas", revisitaRoutes);
+
 
 
 
