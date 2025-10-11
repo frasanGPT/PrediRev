@@ -1,13 +1,32 @@
-// src/routes/authRoutes.js
 import express from "express";
-import { registrarUsuario, loginUsuario } from "../controllers/authController.js";
+import {
+  registrarUsuario,
+  loginUsuario,
+  cambiarPassword,
+  resetPassword
+} from "../controllers/authController.js";
+import { verificarToken, verificarRol } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// 🔹 Registro de usuario (solo uso inicial o gestión del SuperAdmin)
-router.post("/register", registrarUsuario);
+/* ------------------------------------------------------------------
+   🔹 REGISTRO DE USUARIO (Solo SuperAdmin o Admin)
+------------------------------------------------------------------ */
+router.post("/register", verificarToken, verificarRol(["super", "admin"]), registrarUsuario);
 
-// 🔹 Inicio de sesión (genera token JWT)
+/* ------------------------------------------------------------------
+   🔹 INICIO DE SESIÓN (Login público)
+------------------------------------------------------------------ */
 router.post("/login", loginUsuario);
+
+/* ------------------------------------------------------------------
+   🔹 CAMBIO DE CONTRASEÑA (Usuario autenticado)
+------------------------------------------------------------------ */
+router.patch("/password", verificarToken, cambiarPassword);
+
+/* ------------------------------------------------------------------
+   🔹 REINICIO DE CONTRASEÑA (Solo SuperAdmin)
+------------------------------------------------------------------ */
+router.patch("/resetpassword/:id", verificarToken, verificarRol(["super"]), resetPassword);
 
 export default router;

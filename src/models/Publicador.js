@@ -1,4 +1,3 @@
-// src/models/Publicador.js
 import mongoose from "mongoose";
 
 const publicadorSchema = new mongoose.Schema({
@@ -27,7 +26,8 @@ const publicadorSchema = new mongoose.Schema({
     type: String,
     required: true,
     maxlength: 40,
-    match: /^[a-zA-Z0-9@._-]+$/
+    match: /^[a-zA-Z0-9@._-]+$/,
+    unique: true // evita duplicados de correo
   },
   telefono: {
     type: String,
@@ -52,6 +52,16 @@ const publicadorSchema = new mongoose.Schema({
     type: String,
     required: true,
     minlength: 6
+  },
+  // Nuevo campo: obliga al cambio de contraseña en el primer inicio o reinicio
+  cambiopendiente: {
+    type: Boolean,
+    default: false
+  },
+  // Nuevo campo: registra la última vez que se cambió la contraseña
+  fechaUltimoCambio: {
+    type: Date,
+    default: Date.now
   }
 }, { timestamps: true });
 
