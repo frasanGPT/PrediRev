@@ -1,5 +1,6 @@
 // src/controllers/publicadorController.js
 import Publicador from "../models/Publicador.js";
+import Persona from "../models/Persona.js"; // ✅ import necesario
 
 // Crear un nuevo publicador
 export const crearPublicador = async (req, res) => {
@@ -15,20 +16,20 @@ export const crearPublicador = async (req, res) => {
   }
 };
 
-// Obtener todos los publicadores
+// Obtener todos los publicadores (con populate)
 export const obtenerPublicadores = async (req, res) => {
   try {
-    const publicadores = await Publicador.find();
+    const publicadores = await Publicador.find().populate("personasAsignadas");
     res.status(200).json(publicadores);
   } catch (error) {
     res.status(500).json({ mensaje: "Error al obtener los publicadores", error: error.message });
   }
 };
 
-// Obtener un publicador por ID
+// Obtener un publicador por ID (con personas asignadas)
 export const obtenerPublicadorPorId = async (req, res) => {
   try {
-    const publicador = await Publicador.findById(req.params.id);
+    const publicador = await Publicador.findById(req.params.id).populate("personasAsignadas");
     if (!publicador) {
       return res.status(404).json({ mensaje: "Publicador no encontrado" });
     }
@@ -66,5 +67,38 @@ export const eliminarPublicador = async (req, res) => {
     res.status(200).json({ mensaje: "Publicador eliminado correctamente" });
   } catch (error) {
     res.status(500).json({ mensaje: "Error al eliminar el publicador", error: error.message });
+  }
+};
+
+// ✅ Actualizado: Asignar Persona a Publicador (relación en ambos sentidos)
+export const asignarPersona = async (req, res) => {
+  try {
+    const { publicadorId, personaId } = req.body;
+
+    const publicador = await Publicador.findById(publicadorId);
+    const persona = await Persona.findById(personaId);
+
+    if (!publicador || !persona) {
+      return res.status(404).json({ mensaje: "Publicador o Persona no encontrados" });
+    }
+
+    // Evitar duplicados
+    if (publicador.personasAsignadas.includes(personaId)) {
+      return res.status(400).json({ mensaje: "La persona ya está asignada a este publicador" });
+    }
+
+    // 🔗 Relación doble: se actualizan ambos modelos
+    publicador.personasAsignadas.push(personaId);
+    persona.publicadorId = publicadorId;
+
+    await publicador.save();
+    await persona.save();
+
+    res.status(200).json({
+      mensaje: "Persona asignada correctamente al publicador",
+      data: { publicador, persona }
+    });
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al asignar persona", error: error.message });
   }
 };

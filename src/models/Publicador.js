@@ -1,68 +1,123 @@
+// src/models/Publicador.js
 import mongoose from "mongoose";
 
-const publicadorSchema = new mongoose.Schema({
-  nombre1: {
+const { Schema } = mongoose;
+
+const publicadorSchema = new Schema({
+  nombre: {
     type: String,
     required: true,
-    maxlength: 25,
+    maxlength: 40,
     trim: true
   },
-  nombre2: {
+  apellido: {
     type: String,
-    maxlength: 25,
+    required: true,
+    maxlength: 40,
     trim: true
   },
-  apellido1: {
+  telefono: {
     type: String,
-    maxlength: 25,
-    trim: true
-  },
-  apellido2: {
-    type: String,
-    maxlength: 25,
-    trim: true
+    maxlength: 20,
+    trim: true,
+    match: /^[0-9]+$/
   },
   correo: {
     type: String,
     required: true,
-    maxlength: 40,
-    match: /^[a-zA-Z0-9@._-]+$/,
-    unique: true // evita duplicados de correo
+    unique: true,
+    maxlength: 50,
+    trim: true,
+    lowercase: true,
+    match: /^[a-zA-Z0-9@._-]+$/
   },
-  telefono: {
+  grupo: {
     type: String,
-    required: true,
-    maxlength: 30,
-    match: /^[a-zA-Z0-9\s+()-]+$/
+    maxlength: 20,
+    trim: true,
+    match: /^[a-zA-Z0-9\s]+$/
   },
-  rol: {
+  congregacion: {
+    type: String,
+    maxlength: 40,
+    trim: true,
+    match: /^[a-zA-Z0-9\s]+$/
+  },
+  territorioAsignado: {
+    type: String,
+    maxlength: 12,
+    trim: true
+  },
+  fechaAsignacion: {
+    type: Date
+  },
+  observacion: {
+    type: String,
+    maxlength: 100,
+    trim: true
+  },
+  activo: {
     type: String,
     required: true,
     maxlength: 5,
-    enum: ["super", "admin", "publ"]
+    trim: true
   },
-  estado: {
+
+  // 🔒 Campos de autenticación
+  rol: {
     type: String,
-    required: true,
-    maxlength: 8,
-    enum: ["activo", "inactivo"],
-    default: "activo"
+    enum: ["publicador", "admin", "superadmin"],
+    default: "publicador",
   },
   password: {
     type: String,
     required: true,
-    minlength: 6
+    select: true // <--- Clave: asegura que se incluya al hacer findOne()
   },
-  // Nuevo campo: obliga al cambio de contraseña en el primer inicio o reinicio
   cambiopendiente: {
     type: Boolean,
-    default: false
+    default: true
   },
-  // Nuevo campo: registra la última vez que se cambió la contraseña
   fechaUltimoCambio: {
     type: Date,
     default: Date.now
-  }
+  },
+
+  // 🔗 Relación con Personas
+  personasAsignadas: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Persona"
+    }
+  ]
 }, { timestamps: true });
+
+// 🧹 Middleware: limpieza de texto antes de guardar
+publicadorSchema.pre("save", function (next) {
+  const doc = this;
+
+  const cleanText = (value) => {
+    if (typeof value !== "string") return value;
+    const cleaned = value.trim().replace(/\s+/g, " ").toLowerCase();
+    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  };
+
+  const textFields = [
+    "nombre",
+    "apellido",
+    "correo",
+    "grupo",
+    "congregacion",
+    "territorioAsignado",
+    "observacion",
+    "activo"
+  ];
+
+  textFields.forEach((field) => {
+    if (doc[field]) doc[field] = cleanText(doc[field]);
+  });
+
+  next();
+});
 
 export default mongoose.model("Publicador", publicadorSchema);

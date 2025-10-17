@@ -3,41 +3,54 @@ import jwt from "jsonwebtoken";
 
 const SECRET_KEY = process.env.JWT_SECRET || "predirev_secret_key";
 
-// 🔹 Verifica que el token sea válido
+/* ------------------------------------------------------------------
+   🔹 Verificar JWT de usuario autenticado
+------------------------------------------------------------------ */
 export const verificarToken = (req, res, next) => {
-  const token = req.headers["authorization"]?.split(" ")[1];
-  if (!token) {
-    return res.status(403).json({ mensaje: "Token no proporcionado" });
+  const header = req.headers["authorization"];
+  if (!header) {
+    return res.status(401).json({ mensaje: "Token no proporcionado" });
   }
 
+  const token = header.split(" ")[1];
   try {
     const decoded = jwt.verify(token, SECRET_KEY);
-    req.usuario = decoded; // adjuntamos datos del usuario (id, rol, correo)
+    req.usuario = decoded;
     next();
   } catch (error) {
-    return res.status(401).json({ mensaje: "Token inválido o expirado", error: error.message });
+    return res.status(403).json({ mensaje: "Token inválido o expirado" });
   }
 };
 
-// 🔹 Permite acceso solo a roles específicos
-export const verificarRol = (rolesPermitidos = []) => (req, res, next) => {
-  try {
-    const rolUsuario = req.usuario?.rol?.toLowerCase();
-
-    if (!rolUsuario) {
-      return res.status(401).json({ mensaje: "Rol no encontrado en el token" });
-    }
-
-    const rolesNormalizados = rolesPermitidos.map(r => r.toLowerCase());
-
-    if (!rolesNormalizados.includes(rolUsuario)) {
-      console.warn(`❌ Acceso denegado: rol=${rolUsuario}, permitidos=${rolesNormalizados}`);
-      return res.status(403).json({ mensaje: "No tiene permisos para esta acción" });
-    }
-
-    next();
-  } catch (error) {
-    res.status(500).json({ mensaje: "Error verificando rol", error: error.message });
+/* ------------------------------------------------------------------
+   🔹 Solo Admin o SuperAdmin
+------------------------------------------------------------------ */
+export const soloAdmin = (req, res, next) => {
+  if (!req.usuario) {
+    return res.status(401).json({ mensaje: "Usuario no autenticado" });
   }
+
+  const rol = req.usuario.rol;
+  if (rol !== "admin" && rol !== "superadmin") {
+    return res
+      .status(403)
+      .json({ mensaje: "Acceso denegado: se requiere rol de administrador o superadmin." });
+  }
+
+  next();
 };
 
+/* ------------------------------------------------------------------
+   🔹 Solo SuperAdmin
+------------------------------------------------------------------ */
+export const soloSuperAdmin = (req, res, next) => {
+  if (!req.usuario) {
+    return res.status(401).json({ mensaje: "Usuario no autenticado" });
+  }
+
+  if (req.usuario.rol !== "superadmin") {
+    return res.status(403).json({ mensaje: "Acceso denegado: se requiere rol de superadmin." });
+  }
+
+  next();
+};

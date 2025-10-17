@@ -15,17 +15,17 @@ export const crearPersona = async (req, res) => {
 // Obtener todas las personas
 export const obtenerPersonas = async (req, res) => {
   try {
-    const personas = await Persona.find();
+    const personas = await Persona.find().populate("publicadorId", "nombre apellido telefono congregacion");
     res.status(200).json(personas);
   } catch (error) {
     res.status(500).json({ mensaje: "Error al obtener las personas", error: error.message });
   }
 };
 
-// Obtener una persona por ID
+// ✅ Obtener persona por ID (con datos del publicador)
 export const obtenerPersonaPorId = async (req, res) => {
   try {
-    const persona = await Persona.findById(req.params.id);
+    const persona = await Persona.findById(req.params.id).populate("publicadorId", "nombre apellido telefono congregacion");
     if (!persona) {
       return res.status(404).json({ mensaje: "Persona no encontrada" });
     }
@@ -35,7 +35,7 @@ export const obtenerPersonaPorId = async (req, res) => {
   }
 };
 
-// Actualizar una persona
+// Actualizar persona
 export const actualizarPersona = async (req, res) => {
   try {
     const personaActualizada = await Persona.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -48,7 +48,7 @@ export const actualizarPersona = async (req, res) => {
   }
 };
 
-// Eliminar una persona
+// Eliminar persona
 export const eliminarPersona = async (req, res) => {
   try {
     const personaEliminada = await Persona.findByIdAndDelete(req.params.id);
@@ -60,33 +60,3 @@ export const eliminarPersona = async (req, res) => {
     res.status(500).json({ mensaje: "Error al eliminar la persona", error: error.message });
   }
 };
-
-// Activar o inactivar una persona
-export const cambiarEstadoPersona = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { activo } = req.body;
-
-    if (!activo) {
-      return res.status(400).json({ mensaje: "Debe indicar el nuevo estado (por ejemplo: 'true' o 'false')" });
-    }
-
-    const personaActualizada = await Persona.findByIdAndUpdate(
-      id,
-      { activo },
-      { new: true }
-    );
-
-    if (!personaActualizada) {
-      return res.status(404).json({ mensaje: "Persona no encontrada" });
-    }
-
-    res.status(200).json({
-      mensaje: `Estado actualizado correctamente a '${activo}'`,
-      data: personaActualizada
-    });
-  } catch (error) {
-    res.status(500).json({ mensaje: "Error al cambiar el estado de la persona", error: error.message });
-  }
-};
-

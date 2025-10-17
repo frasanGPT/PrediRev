@@ -5,36 +5,20 @@ import {
   obtenerPublicadores,
   obtenerPublicadorPorId,
   actualizarPublicador,
-  eliminarPublicador
+  eliminarPublicador,
+  asignarPersona
 } from "../controllers/publicadorController.js";
-import { verificarToken, verificarRol } from "../middleware/authMiddleware.js";
-import Publicador from "../models/Publicador.js";
 
 const router = express.Router();
 
-// Rutas CRUD con protección JWT y roles
-router.post("/", verificarToken, verificarRol("super", "admin"), crearPublicador);        // Crear
-router.get("/", verificarToken, obtenerPublicadores);                                     // Listar todos
-router.get("/:id", verificarToken, obtenerPublicadorPorId);                               // Obtener por ID
-router.put("/:id", verificarToken, verificarRol("super", "admin"), actualizarPublicador); // Actualizar
-router.delete("/:id", verificarToken, verificarRol("super"), eliminarPublicador);         // Eliminar
+// CRUD básico
+router.post("/", crearPublicador);
+router.get("/", obtenerPublicadores);
+router.get("/:id", obtenerPublicadorPorId);
+router.put("/:id", actualizarPublicador);
+router.delete("/:id", eliminarPublicador);
 
-// 🔹 Ruta de cambio de estado (solo super o admin)
-router.patch("/:id/estado", verificarToken, verificarRol("super", "admin"), async (req, res) => {
-  try {
-    const { estado } = req.body;
-    const publicadorActualizado = await Publicador.findByIdAndUpdate(
-      req.params.id,
-      { estado },
-      { new: true }
-    );
-    if (!publicadorActualizado) {
-      return res.status(404).json({ mensaje: "Publicador no encontrado" });
-    }
-    res.status(200).json({ mensaje: `Estado cambiado a ${estado}`, data: publicadorActualizado });
-  } catch (error) {
-    res.status(500).json({ mensaje: "Error al actualizar el estado", error: error.message });
-  }
-});
+// Relación: asignar persona a publicador
+router.post("/asignar", asignarPersona);
 
 export default router;

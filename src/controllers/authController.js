@@ -1,3 +1,4 @@
+// src/controllers/authController.js
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Publicador from "../models/Publicador.js";
@@ -9,21 +10,36 @@ const SECRET_KEY = process.env.JWT_SECRET || "predirev_secret_key";
 ------------------------------------------------------------------ */
 const registrarUsuario = async (req, res) => {
   try {
-    const { nombre1, correo, telefono, rol, estado, password } = req.body;
+    let { nombre1, correo, telefono, rol, estado, password } = req.body;
 
-    const existe = await Publicador.findOne({ correo });
+    // Normalizar correo
+    const correoNormalizado = correo?.trim().toLowerCase();
+    if (!correoNormalizado) {
+      return res.status(400).json({ mensaje: "El campo 'correo' es obligatorio" });
+    }
+
+    // Validar rol permitido
+    const rolesPermitidos = ["admin", "publicador", "superadmin"];
+    if (rol && !rolesPermitidos.includes(rol)) {
+      return res.status(400).json({ mensaje: "Rol no permitido" });
+    }
+
+    // Verificar si ya existe el correo
+    const existe = await Publicador.findOne({ correo: correoNormalizado });
     if (existe) {
       return res.status(400).json({ mensaje: "El correo ya está registrado" });
     }
 
+    // Encriptar contraseña
     const salt = bcrypt.genSaltSync(10);
     const hash = bcrypt.hashSync(password, salt);
 
+    // Crear nuevo usuario
     const nuevoUsuario = new Publicador({
       nombre1,
-      correo,
+      correo: correoNormalizado,
       telefono,
-      rol,
+      rol: rol || "publicador",
       estado: estado || "activo",
       password: hash,
       cambiopendiente: true,
@@ -53,8 +69,9 @@ const registrarUsuario = async (req, res) => {
 const loginUsuario = async (req, res) => {
   try {
     const { correo, password } = req.body;
-    const usuario = await Publicador.findOne({ correo });
+    const correoNormalizado = correo?.trim().toLowerCase();
 
+    const usuario = await Publicador.findOne({ correo: correoNormalizado });
     if (!usuario) {
       return res.status(404).json({ mensaje: "Usuario no encontrado" });
     }
@@ -74,9 +91,11 @@ const loginUsuario = async (req, res) => {
       mensaje: "Inicio de sesión exitoso",
       token,
       usuario: {
+        id: usuario._id,
         nombre1: usuario.nombre1,
         correo: usuario.correo,
         rol: usuario.rol,
+        estado: usuario.estado,
         cambiopendiente: usuario.cambiopendiente
       }
     });
@@ -91,8 +110,9 @@ const loginUsuario = async (req, res) => {
 const cambiarPassword = async (req, res) => {
   try {
     const { correo, passwordActual, nuevoPassword } = req.body;
+    const correoNormalizado = correo?.trim().toLowerCase();
 
-    const usuario = await Publicador.findOne({ correo });
+    const usuario = await Publicador.findOne({ correo: correoNormalizado });
     if (!usuario) {
       return res.status(404).json({ mensaje: "Usuario no encontrado" });
     }

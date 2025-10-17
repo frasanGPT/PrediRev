@@ -1,3 +1,4 @@
+// src/routes/authRoutes.js
 import express from "express";
 import {
   registrarUsuario,
@@ -5,14 +6,18 @@ import {
   cambiarPassword,
   resetPassword
 } from "../controllers/authController.js";
-import { verificarToken, verificarRol } from "../middleware/authMiddleware.js";
+import {
+  verificarToken,
+  soloAdmin,
+  soloSuperAdmin
+} from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 /* ------------------------------------------------------------------
-   🔹 REGISTRO DE USUARIO (Solo SuperAdmin o Admin)
+   🔹 REGISTRO DE USUARIO (Solo Admin o SuperAdmin)
 ------------------------------------------------------------------ */
-router.post("/register", verificarToken, verificarRol(["super", "admin"]), registrarUsuario);
+router.post("/register", verificarToken, soloAdmin, registrarUsuario);
 
 /* ------------------------------------------------------------------
    🔹 INICIO DE SESIÓN (Login público)
@@ -27,6 +32,6 @@ router.patch("/password", verificarToken, cambiarPassword);
 /* ------------------------------------------------------------------
    🔹 REINICIO DE CONTRASEÑA (Solo SuperAdmin)
 ------------------------------------------------------------------ */
-router.patch("/resetpassword/:id", verificarToken, verificarRol(["super"]), resetPassword);
+router.patch("/resetpassword/:id", verificarToken, soloSuperAdmin, resetPassword);
 
 export default router;
