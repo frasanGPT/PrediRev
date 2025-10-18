@@ -1,5 +1,5 @@
 // src/screens/PersonasScreen.js
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet } from "react-native";
 import API, { autoLogin } from "../api/axiosConfig";
 import NuevaPersonaScreen from "./NuevaPersonaScreen";
@@ -8,12 +8,10 @@ export default function PersonasScreen({ goBack }) {
   const [personas, setPersonas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [shouldRefresh, setShouldRefresh] = useState(false);
 
-  useEffect(() => {
-    cargarPersonas();
-  }, []);
-
-  const cargarPersonas = async () => {
+  const cargarPersonas = useCallback(async () => {
+    setLoading(true);
     try {
       await autoLogin();
       const { data } = await API.get("/personas");
@@ -23,11 +21,29 @@ export default function PersonasScreen({ goBack }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Mostrar el formulario si se presiona “Nueva Persona”
+  useEffect(() => {
+    cargarPersonas();
+  }, [cargarPersonas]);
+
+  // 🔹 Si el formulario indica “refrescar”, volvemos a cargar datos
+  useEffect(() => {
+    if (shouldRefresh) {
+      cargarPersonas();
+      setShouldRefresh(false);
+    }
+  }, [shouldRefresh, cargarPersonas]);
+
   if (showForm) {
-    return <NuevaPersonaScreen goBack={() => setShowForm(false)} />;
+    return (
+      <NuevaPersonaScreen
+        goBack={() => {
+          setShowForm(false);
+          setShouldRefresh(true); // ✅ al volver, refresca lista
+        }}
+      />
+    );
   }
 
   if (loading) {
