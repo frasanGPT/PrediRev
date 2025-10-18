@@ -1,32 +1,37 @@
-// src/api/axiosConfig.js
+c// src/api/axiosConfig.js
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// 🔹 URL del backend accesible desde tu iPhone
+/**
+ * 🌐 Configuración central de Axios - PrediRevApp
+ * ------------------------------------------------------------
+ * Esta versión reemplaza el login automático por un flujo real
+ * controlado por AuthContext. Incluye:
+ *   ✅ BaseURL local para Expo Go (red Wi-Fi)
+ *   ✅ Headers globales JSON
+ *   ✅ Interceptor que agrega el token JWT desde AsyncStorage
+ *   ✅ Manejo unificado de errores
+ * ------------------------------------------------------------
+ */
+
+// 🔹 Dirección IP local del backend
+// ⚠️ Reemplázala si cambia tu red Wi-Fi o IP.
 const API_BASE_URL = "http://192.168.1.3:3000/api";
 
-// 🔹 Credenciales temporales para pruebas
-const DEFAULT_USER = {
-  correo: "frasandev2009@gmail.com",
-  password: "PrediRev2025",
-};
-
+// 🔹 Crear instancia global de Axios
 const API = axios.create({
   baseURL: API_BASE_URL,
   headers: { "Content-Type": "application/json" },
+  timeout: 10000, // 10 segundos por petición
 });
 
-// 🔸 Login automático temporal
-export const autoLogin = async () => {
-  try {
-    const response = await API.post("/auth/login", DEFAULT_USER);
-    const token = response.data.token;
-    if (token) {
-      API.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      console.log("✅ Login automático exitoso");
-    }
-  } catch (error) {
-    console.warn("⚠️ Falló el login automático:", error.message);
-  }
-};
-
-export default API;
+// 🧩 Interceptor: agrega el token JWT a cada request automáticamente
+API.interceptors.request.use(
+  async (config) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (error) {
+      console.warn("⚠️ Error recuperand

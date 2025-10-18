@@ -72,8 +72,8 @@ const publicadorSchema = new Schema({
   password: {
     type: String,
     required: true,
-    select: true // <--- Clave: asegura que se incluya al hacer findOne()
-  },
+    select: false // 🚫 ya no se incluirá en populate()
+  },  
   cambiopendiente: {
     type: Boolean,
     default: true

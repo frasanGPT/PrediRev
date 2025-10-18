@@ -1,71 +1,80 @@
 // src/screens/Dashboard.js
 import React from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, Dimensions } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { globalStyles, colors } from "../theme/GlobalStyles";
 
+// 📏 Obtenemos el ancho de pantalla para ajustar los botones proporcionalmente
+const { width } = Dimensions.get("window");
+
+/**
+ * Dashboard principal de PrediRev
+ *
+ * Mantiene coherencia visual con toda la app:
+ *  - Encabezado con gradiente azul
+ *  - Botones uniformes con ancho fijo (80 % del ancho de pantalla)
+ *  - Sin dependencias externas
+ */
 export default function Dashboard({ navigate }) {
   return (
-    <LinearGradient colors={["#007AFF", "#00C6FF"]} style={styles.container}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar barStyle="light-content" />
+      {/* 🔹 Encabezado con gradiente azul */}
+      <LinearGradient colors={[colors.primary, colors.primaryLight]} style={styles.header}>
+        <Text style={styles.headerTitle}>PrediRev</Text>
+        <Text style={styles.headerSubtitle}>Panel principal</Text>
+      </LinearGradient>
+
+      {/* 🔹 Contenido principal */}
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>PrediRev</Text>
-        <Text style={styles.subtitle}>Panel principal</Text>
+        <TouchableOpacity style={styles.menuButton} onPress={() => navigate("Personas")}>
+          <Text style={globalStyles.buttonText}>👥 Personas</Text>
+        </TouchableOpacity>
 
-        <View style={styles.cardContainer}>
-          <TouchableOpacity style={styles.card} onPress={() => navigate("Personas")}>
-            <Text style={styles.cardTitle}>Personas</Text>
-            <Text style={styles.cardText}>Ver y registrar personas</Text>
-          </TouchableOpacity>
+        <TouchableOpacity style={styles.menuButton} onPress={() => navigate("Publicadores")}>
+          <Text style={globalStyles.buttonText}>📋 Publicadores</Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity style={styles.card} onPress={() => navigate("Publicadores")}>
-            <Text style={styles.cardTitle}>Publicadores</Text>
-            <Text style={styles.cardText}>Gestionar territorios</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.card} onPress={() => navigate("Reportes")}>
-            <Text style={styles.cardTitle}>Reportes</Text>
-            <Text style={styles.cardText}>Estadísticas generales</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.menuButton} onPress={() => navigate("Reportes")}>
+          <Text style={globalStyles.buttonText}>📊 Reportes</Text>
+        </TouchableOpacity>
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: {
-    paddingVertical: 80,
-    paddingHorizontal: 20,
+  header: {
+    paddingVertical: 60,
     alignItems: "center",
   },
-  title: {
-    fontSize: 32,
+  headerTitle: {
+    fontSize: 36,
     fontWeight: "bold",
-    color: "#fff",
-    marginBottom: 10,
+    color: colors.textLight,
   },
-  subtitle: {
+  headerSubtitle: {
     fontSize: 18,
     color: "#eaf7ff",
-    marginBottom: 40,
+    marginTop: 6,
   },
-  cardContainer: { width: "100%" },
-  card: {
-    backgroundColor: "rgba(255,255,255,0.9)",
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
+  content: {
+    flexGrow: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  // 🔹 Botón del menú principal (ancho uniforme)
+  menuButton: {
+    width: width * 0.8, // 80% del ancho total
+    backgroundColor: colors.primary,
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginVertical: 10,
+    elevation: 3,
     shadowColor: "#000",
     shadowOpacity: 0.15,
     shadowRadius: 6,
-    elevation: 3,
   },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#007AFF",
-    marginBottom: 5,
-  },
-  cardText: { fontSize: 14, color: "#333" },
 });

@@ -9,16 +9,42 @@ import {
   asignarPersona
 } from "../controllers/publicadorController.js";
 
+import {
+  verificarToken,
+  soloAdmin,
+  soloSuperAdmin
+} from "../middleware/authMiddleware.js";
+
 const router = express.Router();
 
-// CRUD básico
-router.post("/", crearPublicador);
-router.get("/", obtenerPublicadores);
-router.get("/:id", obtenerPublicadorPorId);
-router.put("/:id", actualizarPublicador);
-router.delete("/:id", eliminarPublicador);
+/* ------------------------------------------------------------------
+   🔹 Crear nuevo publicador (Solo admin o superadmin)
+------------------------------------------------------------------ */
+router.post("/", verificarToken, soloAdmin, crearPublicador);
 
-// Relación: asignar persona a publicador
-router.post("/asignar", asignarPersona);
+/* ------------------------------------------------------------------
+   🔹 Obtener todos los publicadores (Cualquier usuario autenticado)
+------------------------------------------------------------------ */
+router.get("/", verificarToken, obtenerPublicadores);
+
+/* ------------------------------------------------------------------
+   🔹 Obtener publicador por ID (Cualquier usuario autenticado)
+------------------------------------------------------------------ */
+router.get("/:id", verificarToken, obtenerPublicadorPorId);
+
+/* ------------------------------------------------------------------
+   🔹 Actualizar publicador (Solo admin o superadmin)
+------------------------------------------------------------------ */
+router.put("/:id", verificarToken, soloAdmin, actualizarPublicador);
+
+/* ------------------------------------------------------------------
+   🔹 Eliminar publicador (Solo superadmin)
+------------------------------------------------------------------ */
+router.delete("/:id", verificarToken, soloSuperAdmin, eliminarPublicador);
+
+/* ------------------------------------------------------------------
+   🔹 Asignar persona a publicador (Solo admin o superadmin)
+------------------------------------------------------------------ */
+router.post("/asignar", verificarToken, soloAdmin, asignarPersona);
 
 export default router;

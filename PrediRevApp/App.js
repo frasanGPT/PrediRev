@@ -1,51 +1,58 @@
 // App.js
-import React, { useState } from "react";
-import { View, StyleSheet, StatusBar } from "react-native";
+import React, { useContext } from "react";
+import { View, ActivityIndicator, StyleSheet, StatusBar } from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
+import { AuthProvider, AuthContext } from "./src/context/AuthContext";
+import DrawerNavigator from "./src/navigation/DrawerNavigator";
 import InicioScreen from "./src/screens/InicioScreen";
-import Dashboard from "./src/screens/Dashboard";
-import PersonasScreen from "./src/screens/PersonasScreen";
-import PublicadoresScreen from "./src/screens/PublicadoresScreen";
-import ReportesScreen from "./src/screens/ReportesScreen";
 
 /**
- * App principal de PrediRev (Expo Go)
- *
- * Flujo:
- *  1️⃣ InicioScreen → ejecuta autoLogin()
- *  2️⃣ Si el login es exitoso → navega automáticamente al Dashboard
- *  3️⃣ Desde el Dashboard se accede a Personas, Publicadores, Reportes
- *
- * Se mantiene la navegación manual mediante el estado "screen" sin dependencias externas.
+ * 🚀 App principal de PrediRevApp (versión con Drawer + Roles)
+ * ---------------------------------------------------------------
+ * 1️⃣ Usa AuthProvider para manejar login/logout globalmente.
+ * 2️⃣ Muestra InicioScreen si no hay sesión.
+ * 3️⃣ Muestra DrawerNavigator si hay sesión activa.
+ * 4️⃣ Controla loader inicial mientras se valida AsyncStorage.
+ * ---------------------------------------------------------------
  */
-export default function App() {
-  const [screen, setScreen] = useState("Inicio");
 
-  const renderScreen = () => {
-    switch (screen) {
-      case "Dashboard":
-        return <Dashboard navigate={setScreen} />;
-      case "Personas":
-        return <PersonasScreen goBack={() => setScreen("Dashboard")} />;
-      case "Publicadores":
-        return <PublicadoresScreen goBack={() => setScreen("Dashboard")} />;
-      case "Reportes":
-        return <ReportesScreen goBack={() => setScreen("Dashboard")} />;
-      default:
-        // Pantalla inicial (login automático)
-        return <InicioScreen navigate={setScreen} />;
-    }
-  };
+// 🔹 Componente principal que decide qué mostrar
+function MainApp() {
+  const { usuario, loading } = useContext(AuthContext);
 
-  return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
-      {renderScreen()}
-    </View>
+  if (loading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#00897B" />
+      </View>
+    );
+  }
+
+  return usuario ? (
+    <DrawerNavigator />
+  ) : (
+    <InicioScreen />
   );
 }
 
+// 🔹 Envuelve todo con el AuthProvider
+export default function App() {
+  return (
+    <AuthProvider>
+      <NavigationContainer>
+        <StatusBar barStyle="light-content" />
+        <MainApp />
+      </NavigationContainer>
+    </AuthProvider>
+  );
+}
+
+// 🎨 Estilos básicos
 const styles = StyleSheet.create({
-  container: {
+  loaderContainer: {
     flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
 });

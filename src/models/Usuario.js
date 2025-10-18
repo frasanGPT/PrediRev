@@ -24,7 +24,7 @@ const usuarioSchema = new mongoose.Schema(
     },
     rol: {
       type: String,
-      enum: ["admin", "publicador"],
+      enum: ["superadmin", "admin", "publicador"], // 🟢 agregado superadmin
       default: "publicador",
     },
     activo: {

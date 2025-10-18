@@ -2,16 +2,17 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import os from "os";
 import { connectDB } from "./config/db.js";
 
 dotenv.config();
 const app = express();
 
-// Middlewares
+// 🧩 Middlewares
 app.use(cors());
 app.use(express.json());
 
-// 🔗 Importar rutas (una sola vez cada una)
+// 🔗 Importar rutas
 import personaRoutes from "./routes/personaRoutes.js";
 import publicadorRoutes from "./routes/publicadorRoutes.js";
 import revisitaRoutes from "./routes/revisitaRoutes.js";
@@ -20,7 +21,6 @@ import authRoutes from "./routes/authRoutes.js";
 import testRoutes from "./routes/testRoutes.js";
 import territorioRoutes from "./routes/territorioRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
-
 
 // 🧭 Registrar rutas
 app.use("/api/personas", personaRoutes);
@@ -37,15 +37,27 @@ app.get("/", (req, res) => {
   res.send("Servidor PrediRev activo 🚀");
 });
 
-// Puerto y conexión
-const PORT = process.env.PORT || 3000;
+// 🧱 Conexión a MongoDB
 connectDB();
-/*
-app.listen(PORT, () => {
-  console.log(`✅ Servidor PrediRev ejecutándose en el puerto ${PORT}`);
-});
-*/
 
+// 🧭 Detectar IP local automáticamente
+const getLocalIP = () => {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === "IPv4" && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return "localhost";
+};
+
+const localIP = getLocalIP();
+const PORT = process.env.PORT || 3000;
+
+// 🚀 Iniciar servidor
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ Servidor PrediRev disponible en red local: http://<tu_ip_local>:${PORT}`);
+  console.log(`✅ Servidor PrediRev disponible en red local: http://${localIP}:${PORT}`);
+  console.log("✅ Conexión exitosa a MongoDB Atlas");
 });

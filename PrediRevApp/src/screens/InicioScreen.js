@@ -1,47 +1,65 @@
 // src/screens/InicioScreen.js
-// Pantalla inicial simple que realiza el login automático y dirige al Dashboard
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { autoLogin } from "../api/axiosConfig";
+import { AuthContext } from "../context/AuthContext";
 
 /**
+ * 🎬 InicioScreen – Versión actualizada con AuthContext
+ * -------------------------------------------------------------
  * Esta pantalla:
- *  - Muestra el logo y un texto de bienvenida
- *  - Llama automáticamente a autoLogin()
- *  - Si el login tiene éxito, navega al Dashboard luego de 5 segundos (para visualización)
- *  - Si falla, muestra un mensaje temporal y vuelve a intentar después
+ *  ✅ Usa AuthContext en lugar de autoLogin()
+ *  ✅ Realiza login automático con credenciales de prueba
+ *  ✅ Guarda token y usuario en AsyncStorage
+ *  ✅ Navega al Dashboard tras confirmación
+ *  ✅ Reintenta automáticamente si falla
+ * -------------------------------------------------------------
  */
-export default function InicioScreen({ navigate }) {
+
+export default function InicioScreen() {
+  const { login } = useContext(AuthContext); // usamos la función login() global
   const [mensaje, setMensaje] = useState("Iniciando sesión...");
 
   useEffect(() => {
     const loginYContinuar = async () => {
       console.log("🌀 Cargando InicioScreen...");
       try {
-        await autoLogin();
-        setMensaje("✅ Inicio de sesión exitoso");
-        // ⏱ Espera 5 segundos para confirmar visualmente la transición
-        setTimeout(() => navigate("Dashboard"), 5000);
+        // ⚙️ Credenciales temporales para pruebas
+        const correo = "frasandev2009@gmail.com";
+        const password = "PrediRev2025";
+
+        // 🔑 Llamada real al login del backend
+        const resultado = await login(correo, password);
+
+        if (resultado.success) {
+          setMensaje("✅ Sesión iniciada correctamente");
+        } else {
+          throw new Error("Credenciales inválidas o fallo de conexión");
+        }
       } catch (error) {
-        console.log("⚠️ Error en autoLogin:", error.message);
+        console.log("⚠️ Error en login automático:", error.message);
         setMensaje("Error de conexión. Reintentando...");
+        // 🔁 Reintenta automáticamente después de 3 segundos
         setTimeout(loginYContinuar, 3000);
       }
     };
+
     loginYContinuar();
   }, []);
 
   return (
     <LinearGradient colors={["#007AFF", "#00C6FF"]} style={styles.container}>
       <Text style={styles.title}>PrediRev</Text>
+
       <ActivityIndicator size="large" color="#fff" style={{ marginVertical: 20 }} />
+
       <Text style={styles.text}>{mensaje}</Text>
-      <Text style={styles.note}>Transición retardada 5s (solo para prueba)</Text>
+      <Text style={styles.note}>Login automático con AuthContext</Text>
     </LinearGradient>
   );
 }
 
+// 🎨 Estilos visuales
 const styles = StyleSheet.create({
   container: {
     flex: 1,

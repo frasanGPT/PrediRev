@@ -5,18 +5,29 @@ import {
   obtenerRevisitasPorDia,
   obtenerRevisitasPorSemana,
   obtenerRevisitasPorMes,
-  obtenerEstadoTerritorios
+  obtenerEstadoTerritorios,
+  obtenerDashboardResumen
 } from "../controllers/dashboardController.js";
 
-import { verificarToken, soloAdmin } from "../middleware/authMiddleware.js";
+import { verificarToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// 📈 Endpoints de métricas protegidos (solo admin/superadmin)
-router.get("/resumen", verificarToken, soloAdmin, obtenerResumenGlobal);
-router.get("/revisitas/dia", verificarToken, soloAdmin, obtenerRevisitasPorDia);
-router.get("/revisitas/semana", verificarToken, soloAdmin, obtenerRevisitasPorSemana);
-router.get("/revisitas/mes", verificarToken, soloAdmin, obtenerRevisitasPorMes);
-router.get("/territorios/estado", verificarToken, soloAdmin, obtenerEstadoTerritorios);
+/* ------------------------------------------------------------------
+   📊 RUTAS DE MÉTRICAS Y RESUMEN GENERAL
+------------------------------------------------------------------ */
+
+// 🔸 Métricas básicas (libres o protegidas según tus necesidades)
+router.get("/global", obtenerResumenGlobal);
+router.get("/revisitas/dia", obtenerRevisitasPorDia);
+router.get("/revisitas/semana", obtenerRevisitasPorSemana);
+router.get("/revisitas/mes", obtenerRevisitasPorMes);
+router.get("/territorios/estado", obtenerEstadoTerritorios);
+
+/* ------------------------------------------------------------------
+   📈 NUEVO: RESUMEN GLOBAL PARA EL DASHBOARD DE LA APP EXPO
+   - Requiere autenticación con token JWT
+------------------------------------------------------------------ */
+router.get("/resumen", verificarToken, obtenerDashboardResumen);
 
 export default router;

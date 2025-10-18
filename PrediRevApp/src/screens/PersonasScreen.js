@@ -1,21 +1,38 @@
 // src/screens/PersonasScreen.js
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  ActivityIndicator,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
 import API, { autoLogin } from "../api/axiosConfig";
 import NuevaPersonaScreen from "./NuevaPersonaScreen";
+import { globalStyles, colors } from "../theme/GlobalStyles";
 
+/**
+ * Pantalla Personas (paginada localmente)
+ *  - Muestra 5 personas por página
+ *  - Botones “Anterior” y “Siguiente”
+ *  - Diseño coherente con el resto de la app
+ */
 export default function PersonasScreen({ goBack }) {
   const [personas, setPersonas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [shouldRefresh, setShouldRefresh] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 5; // 🔹 Mostrar 5 personas por página
 
+  // Cargar datos desde el backend
   const cargarPersonas = useCallback(async () => {
     setLoading(true);
     try {
       await autoLogin();
       const { data } = await API.get("/personas");
-      setPersonas(data);
+      setPersonas(data.reverse()); // 🔹 Las más recientes primero
     } catch (error) {
       console.warn("❌ Error al cargar personas:", error.message);
     } finally {
@@ -27,7 +44,6 @@ export default function PersonasScreen({ goBack }) {
     cargarPersonas();
   }, [cargarPersonas]);
 
-  // 🔹 Si el formulario indica “refrescar”, volvemos a cargar datos
   useEffect(() => {
     if (shouldRefresh) {
       cargarPersonas();
@@ -40,7 +56,7 @@ export default function PersonasScreen({ goBack }) {
       <NuevaPersonaScreen
         goBack={() => {
           setShowForm(false);
-          setShouldRefresh(true); // ✅ al volver, refresca lista
+          setShouldRefresh(true);
         }}
       />
     );
@@ -49,22 +65,28 @@ export default function PersonasScreen({ goBack }) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={{ marginTop: 10 }}>Cargando personas...</Text>
       </View>
     );
   }
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Lista de Personas</Text>
+  // 🔹 Cálculo de las páginas
+  const totalPages = Math.ceil(personas.length / pageSize);
+  const startIndex = (page - 1) * pageSize;
+  const visiblePersonas = personas.slice(startIndex, startIndex + pageSize);
 
-      <TouchableOpacity style={styles.addButton} onPress={() => setShowForm(true)}>
-        <Text style={styles.addButtonText}>+ Nueva Persona</Text>
+  return (
+    <View style={globalStyles.screenContainer}>
+      <Text style={globalStyles.title}>Personas</Text>
+
+      <TouchableOpacity style={globalStyles.button} onPress={() => setShowForm(true)}>
+        <Text style={globalStyles.buttonText}>+ Nueva Persona</Text>
       </TouchableOpacity>
 
+      {/* 🔹 Lista paginada */}
       <FlatList
-        data={personas}
+        data={visiblePersonas}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
           <View style={styles.card}>
@@ -74,38 +96,86 @@ export default function PersonasScreen({ goBack }) {
             <Text style={styles.info}>Barrio: {item.barrio}</Text>
           </View>
         )}
-        ListEmptyComponent={<Text style={{ textAlign: "center", marginTop: 20 }}>No hay personas registradas.</Text>}
+        ListEmptyComponent={
+          <Text style={{ textAlign: "center", marginTop: 20 }}>
+            No hay personas registradas.
+          </Text>
+        }
       />
 
+      {/* 🔹 Controles de paginación */}
+      {personas.length > pageSize && (
+        <View style={styles.pagination}>
+          <TouchableOpacity
+            style={[styles.pageButton, page === 1 && styles.disabledButton]}
+            onPress={() => setPage((p) => Math.max(p - 1, 1))}
+            disabled={page === 1}
+          >
+            <Text style={styles.pageButtonText}>← Anterior</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.pageIndicator}>
+            Página {page} de {totalPages}
+          </Text>
+
+          <TouchableOpacity
+            style={[styles.pageButton, page === totalPages && styles.disabledButton]}
+            onPress={() => setPage((p) => Math.min(p + 1, totalPages))}
+            disabled={page === totalPages}
+          >
+            <Text style={styles.pageButtonText}>Siguiente →</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* 🔹 Botón volver */}
       <TouchableOpacity onPress={goBack} style={styles.backButton}>
-        <Text style={styles.backText}>← Volver</Text>
+        <Text style={styles.backText}>← Volver al Dashboard</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 20 },
-  title: { fontSize: 22, fontWeight: "bold", marginBottom: 10, color: "#007AFF" },
-  addButton: {
-    backgroundColor: "#007AFF",
-    padding: 10,
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  addButtonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
   card: {
     backgroundColor: "#f4f9ff",
     padding: 15,
     marginBottom: 10,
     borderRadius: 10,
-    borderColor: "#007AFF",
+    borderColor: colors.primary,
     borderWidth: 0.5,
   },
   name: { fontSize: 16, fontWeight: "600" },
-  info: { fontSize: 14, color: "#333" },
-  backButton: { marginTop: 30, alignItems: "center" },
-  backText: { color: "#007AFF", fontSize: 16 },
+  info: { fontSize: 14, color: colors.textDark },
+  pagination: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 15,
+  },
+  pageButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+  },
+  disabledButton: {
+    backgroundColor: "#b3d4ff",
+  },
+  pageButtonText: {
+    color: colors.textLight,
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+  pageIndicator: {
+    fontSize: 14,
+    color: colors.textDark,
+  },
+  backButton: { marginTop: 25, alignItems: "center" },
+  backText: {
+    color: colors.primary,
+    fontSize: 16,
+    fontWeight: "500",
+  },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
 });
