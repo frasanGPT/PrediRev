@@ -1,7 +1,7 @@
-// src/screens/NuevaPersonaScreen.js
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import API, { autoLogin } from "../api/axiosConfig";
+import ToastMessage from "../components/ToastMessage";
 
 export default function NuevaPersonaScreen({ goBack }) {
   const [form, setForm] = useState({
@@ -10,75 +10,82 @@ export default function NuevaPersonaScreen({ goBack }) {
     barrio: "",
     TarjetaPred: "",
   });
+  const [toast, setToast] = useState({ visible: false, message: "" });
 
   const handleChange = (name, value) => setForm({ ...form, [name]: value });
 
+  const showToast = (msg) => {
+    setToast({ visible: true, message: msg });
+    setTimeout(() => setToast({ visible: false, message: "" }), 2000);
+  };
+
   const handleSubmit = async () => {
     if (!form.nombre1 || !form.apellido1 || !form.barrio) {
-      Alert.alert("Campos incompletos", "Por favor completa nombre, apellido y barrio.");
+      showToast("Completa los campos requeridos");
       return;
     }
 
-    // 🔹 Limpieza y campos mínimos requeridos por el backend
     const payload = {
       ...form,
-      barrio: form.barrio.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, ""), // elimina tildes
+      barrio: form.barrio.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
       activo: "True",
-      Tema: "Predicación general", // valor por defecto temporal
+      Tema: "Predicación general",
     };
-
-    console.log("📤 Enviando datos:", payload);
 
     try {
       await autoLogin();
-      const { data } = await API.post("/personas", payload);
-      Alert.alert("✅ Registro exitoso", "La persona fue registrada correctamente.");
-      console.log("✅ Persona creada:", data);
+      await API.post("/personas", payload);
+      showToast("✅ Persona guardada");
       setForm({ nombre1: "", apellido1: "", barrio: "", TarjetaPred: "" });
+      setTimeout(goBack, 2200); // vuelve después del toast
     } catch (error) {
-      Alert.alert("❌ Error", error.message);
-      console.log("❌ Error al crear persona:", error.response?.data || error.message);
+      console.log("❌ Error:", error.response?.data || error.message);
+      showToast("Error al guardar");
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Registrar Persona</Text>
+    <View style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Registrar Persona</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Primer nombre"
-        value={form.nombre1}
-        onChangeText={(v) => handleChange("nombre1", v)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Primer apellido"
-        value={form.apellido1}
-        onChangeText={(v) => handleChange("apellido1", v)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Barrio"
-        value={form.barrio}
-        onChangeText={(v) => handleChange("barrio", v)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Tarjeta Pred (opcional)"
-        keyboardType="numeric"
-        value={form.TarjetaPred}
-        onChangeText={(v) => handleChange("TarjetaPred", v)}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Primer nombre"
+          value={form.nombre1}
+          onChangeText={(v) => handleChange("nombre1", v)}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Primer apellido"
+          value={form.apellido1}
+          onChangeText={(v) => handleChange("apellido1", v)}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Barrio"
+          value={form.barrio}
+          onChangeText={(v) => handleChange("barrio", v)}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Tarjeta Pred (opcional)"
+          keyboardType="numeric"
+          value={form.TarjetaPred}
+          onChangeText={(v) => handleChange("TarjetaPred", v)}
+        />
 
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>Guardar</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+          <Text style={styles.buttonText}>Guardar</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity onPress={goBack} style={styles.backButton}>
-        <Text style={styles.backText}>← Volver</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <TouchableOpacity onPress={goBack} style={styles.backButton}>
+          <Text style={styles.backText}>← Volver</Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      <ToastMessage message={toast.message} visible={toast.visible} />
+    </View>
   );
 }
 
