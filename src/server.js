@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import os from "os";
 import { connectDB } from "./config/db.js";
+import devAuthRoutes from "./routes/devAuth.js";
 
 dotenv.config();
 const app = express();
@@ -32,10 +33,19 @@ app.use("/api/test", testRoutes);
 app.use("/api/territorios", territorioRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
+// Solo habilitar en entorno de desarrollo
+if (process.env.NODE_ENV !== "production") {
+  app.use("/api/auth", devAuthRoutes);
+}
+
+
 // Ruta base de prueba
 app.get("/", (req, res) => {
   res.send("Servidor PrediRev activo 🚀");
 });
+
+
+
 
 // 🧱 Conexión a MongoDB
 connectDB();
